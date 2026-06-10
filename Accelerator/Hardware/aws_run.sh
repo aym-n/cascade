@@ -10,6 +10,9 @@
 #
 # Calculations + RTL only (no Vivado):
 #   ./aws_run.sh
+#
+# Measured NumPy vs RTL vs Vivado Fmax (after synth):
+#   ./benchmark/run_compare.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
