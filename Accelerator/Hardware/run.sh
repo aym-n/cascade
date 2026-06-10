@@ -113,6 +113,24 @@ else
     conv_result=1
 fi
 
+# --- TEST 5: 16x16 Matrix Multiply (no tiling) ---
+echo -e "\n${BLUE}[5/5] Testing 16x16 Matrix Multiply (no tiling)${NC}"
+echo "--------------------------------------"
+if [ -f "src/systolic_matmul_16x16.v" ]; then
+    run_simulation "16x16 Matmul Test" \
+        "src/pe.v src/systolic_array_16x16.v src/systolic_matmul_16x16.v" \
+        "sim/tb_matmul_16x16.v" \
+        "tb_matmul_16x16"
+    matmul16_result=$?
+
+    if [ $matmul16_result -eq 0 ]; then
+        grep -E "\[PASS\]|\[FAIL\]" output/tb_matmul_16x16_sim.log || true
+    fi
+else
+    echo -e "${YELLOW}Skipping: src/systolic_matmul_16x16.v not found${NC}"
+    matmul16_result=1
+fi
+
 # --- SUMMARY ---
 echo -e "\n${BLUE}========================================${NC}"
 echo -e "${BLUE}  Simulation Summary${NC}"
@@ -122,4 +140,5 @@ echo -e "${BLUE}========================================${NC}"
 [ $array_result -eq 0 ] && echo -e "Systolic 3x3:      ${GREEN}PASSED${NC}" || echo -e "Systolic 3x3:      ${RED}FAILED${NC}"
 [ $tiling_result -eq 0 ]&& echo -e "Tiling 6x6:        ${GREEN}PASSED${NC}" || echo -e "Tiling 6x6:        ${RED}FAILED${NC}"
 [ $conv_result -eq 0 ]  && echo -e "Convolution Test:  ${GREEN}PASSED${NC}" || echo -e "Convolution Test:  ${RED}FAILED${NC}"
+[ $matmul16_result -eq 0 ] && echo -e "16x16 Matmul:      ${GREEN}PASSED${NC}" || echo -e "16x16 Matmul:      ${RED}FAILED${NC}"
 echo -e "\nLogs and Waveforms are in: ${BLUE}output/${NC}"

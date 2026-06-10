@@ -13,6 +13,8 @@ create_project cascade_synth $proj -part $part -force
 set rtl_files {
     pe.v
     systolic_array.v
+    systolic_array_16x16.v
+    systolic_matmul_16x16.v
     systolic_tiler.v
     conv_im2col.v
 }

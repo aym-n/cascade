@@ -5,7 +5,7 @@
 #   make impl TARGET=tiler
 #   make report
 #
-# Targets: array | tiler | conv | all
+# Targets: array | tiler | conv | matmul16 | all
 
 TARGET ?= tiler
 FPGA_PART ?= xcvu9p-flgb2104-2-i
@@ -20,10 +20,12 @@ else ifeq ($(TARGET),tiler)
   SYNTH_TOP := cascade_synth_top_tiler
 else ifeq ($(TARGET),conv)
   SYNTH_TOP := cascade_synth_top_conv
+else ifeq ($(TARGET),matmul16)
+  SYNTH_TOP := cascade_synth_top_matmul16
 else ifeq ($(TARGET),all)
   SYNTH_TOP :=
 else
-  $(error Unknown TARGET=$(TARGET). Use array, tiler, conv, or all)
+  $(error Unknown TARGET=$(TARGET). Use array, tiler, conv, matmul16, or all)
 endif
 
 .PHONY: help check-vivado synth impl report clean all-targets
@@ -35,7 +37,8 @@ help:
 	@echo "  make impl TARGET=tiler     # recommended: synth + place/route"
 	@echo "  make synth TARGET=array    # faster: synthesis only"
 	@echo "  make report                # print LUT/DSP/Fmax summary"
-	@echo "  make all-targets           # run impl for array, tiler, conv"
+	@echo "  make impl TARGET=matmul16 # 16x16 systolic core (no tiling)"
+	@echo "  make all-targets           # run impl for all designs"
 	@echo ""
 	@echo "Ubuntu FPGA Developer AMI (e.g. m7i-flex.large):"
 	@echo "  1. ssh ubuntu@<ip>   (user is ubuntu, not ec2-user)"
@@ -72,9 +75,10 @@ report:
 	@bash scripts/print_summary.sh $(BUILD_DIR)
 
 all-targets:
-	@$(MAKE) impl TARGET=array BUILD_DIR=build-array
-	@$(MAKE) impl TARGET=tiler BUILD_DIR=build-tiler
-	@$(MAKE) impl TARGET=conv  BUILD_DIR=build-conv
+	@$(MAKE) impl TARGET=array     BUILD_DIR=build-array
+	@$(MAKE) impl TARGET=matmul16  BUILD_DIR=build-matmul16
+	@$(MAKE) impl TARGET=tiler     BUILD_DIR=build-tiler
+	@$(MAKE) impl TARGET=conv      BUILD_DIR=build-conv
 
 clean:
-	rm -rf build build-array build-tiler build-conv
+	rm -rf build build-array build-matmul16 build-tiler build-conv

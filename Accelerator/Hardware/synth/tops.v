@@ -68,3 +68,19 @@ module cascade_synth_top_conv (
         .debug_out(debug_out)
     );
 endmodule
+
+module cascade_synth_top_matmul16 (
+    input  wire               clk,
+    input  wire               rst_n,
+    input  wire               start,
+    output wire               done,
+    output wire signed [31:0] result_sum
+);
+    systolic_matmul_16x16 u_matmul (
+        .clk(clk),
+        .rst_n(rst_n),
+        .start(start),
+        .done(done),
+        .result_sum(result_sum)
+    );
+endmodule
