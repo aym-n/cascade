@@ -26,8 +26,7 @@ add_files -fileset constrs_1 [file join $synthroot constraints.xdc]
 set_property top $top [current_fileset]
 set_property VERILOG_DEFINE {SYNTHESIS} [current_fileset]
 
-set_property strategy Flow_PerfOptimized_high [get_runs synth_1]
-set_property strategy Flow_PerfOptimized_high [get_runs impl_1]
+# Use Vivado default strategies for cross-version compatibility (2024/2025+).
 
 launch_runs synth_1 -jobs $::env(VIVADO_JOBS)
 wait_on_run synth_1
