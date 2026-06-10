@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# One-shot AWS benchmark: calculations + optional FPGA synthesis.
+# One-shot AWS benchmark: calculations + optional Vivado synthesis.
 #
-# On a cheap EC2 (t3.small):
-#   sudo yum install -y git iverilog python3-pip
+# Ubuntu FPGA Developer AMI (e.g. m7i-flex.large):
+#   sudo apt update && sudo apt install -y git iverilog python3-pip python3-numpy make
 #   git clone https://github.com/aym-n/cascade
-#   cd cascade/Accelerator/Hardware && ./aws_run.sh
-#
-# On FPGA Developer AMI (adds Vivado synthesis):
+#   cd cascade/Accelerator/Hardware
 #   source /opt/Xilinx/Vivado/*/settings64.sh
 #   ./aws_run.sh --synth
+#
+# Calculations + RTL only (no Vivado):
+#   ./aws_run.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -20,7 +21,11 @@ for arg in "$@"; do
         -h|--help)
             echo "Usage: $0 [--synth]"
             echo "  default  run software + RTL calculation benchmarks"
-            echo "  --synth  also run Vivado impl (requires FPGA Developer AMI)"
+            echo "  --synth  also run Vivado impl (FPGA Developer AMI + source Vivado settings)"
+            echo ""
+            echo "Ubuntu setup:"
+            echo "  sudo apt install -y git iverilog python3-numpy make"
+            echo "  source /opt/Xilinx/Vivado/*/settings64.sh"
             exit 0
             ;;
         *)
