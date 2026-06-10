@@ -1,3 +1,8 @@
 .DS_Store
 *.vvp
 *.vcd
+output/
+Accelerator/Hardware/synth/build*/
+.cursor/
+firesim/workspace/
+firesim/workspace-test/
