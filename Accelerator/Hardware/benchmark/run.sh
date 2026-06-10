@@ -36,7 +36,9 @@ if command -v iverilog >/dev/null; then
     (cd "$ROOT" && ./run.sh)
     rtl_result=$?
 else
-    echo -e "${RED}iverilog not found. On Amazon Linux: sudo yum install -y iverilog${NC}"
+    echo -e "${RED}iverilog not found. Install with:${NC}"
+    echo "  Ubuntu:        sudo apt install -y iverilog"
+    echo "  Amazon Linux:  sudo yum install -y iverilog"
     rtl_result=1
 fi
 
