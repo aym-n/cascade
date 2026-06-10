@@ -45,27 +45,32 @@ import sys
 
 util_path, time_path = sys.argv[1:3]
 
-def parse_util_line(text, label):
+def parse_util_line(text, labels):
+    """Parse Vivado table: | Site Type | Used | Fixed | Prohibited | Available | Util% |"""
     for line in text.splitlines():
-        if label in line and "|" in line:
-            cells = [c.strip() for c in line.split("|") if c.strip()]
-            if len(cells) >= 4:
-                return cells[1], cells[3], cells[4].rstrip("%")
+        if "|" not in line:
+            continue
+        if not any(label in line for label in labels):
+            continue
+        cells = [c.strip() for c in line.split("|") if c.strip()]
+        if len(cells) >= 6 and cells[1].isdigit():
+            used, avail, util = cells[1], cells[4], cells[5]
+            return used, avail, util.lstrip("<").rstrip("%")
     return None
 
 with open(util_path, encoding="utf-8", errors="replace") as f:
     util = f.read()
 
 labels = [
-    ("CLB LUTs", "CLB LUTs"),
-    ("CLB Registers", "CLB Registers"),
-    ("DSP Blocks", "DSPs"),
-    ("Block RAM", "Block RAM Tile"),
+    ("CLB LUTs", ("CLB LUTs", "Slice LUTs")),
+    ("CLB Registers", ("CLB Registers", "Slice Registers")),
+    ("DSP Blocks", ("DSPs", "DSP Blocks", "DSP")),
+    ("Block RAM", ("Block RAM Tile", "Block RAM", "RAMB36")),
 ]
 
 print("--- Resources ---")
-for title, key in labels:
-    row = parse_util_line(util, key)
+for title, keys in labels:
+    row = parse_util_line(util, keys)
     if row:
         used, avail, pct = row
         print(f"{title:14} {used} used / {avail} available ({pct}%)")
@@ -82,19 +87,35 @@ if time_path:
     if timing:
         print()
         print("--- Timing ---")
-        for metric in ("WNS(ns)", "TNS(ns)", "WHS(ns)", "THS(ns)"):
-            m = re.search(rf"^{re.escape(metric)}\s+(-?\d+\.\d+)", timing, re.M)
-            if m:
-                print(f"{metric:10} {m.group(1)}")
 
-        wns_m = re.search(r"^WNS\(ns\)\s+(-?\d+\.\d+)", timing, re.M)
-        if wns_m:
-            wns = float(wns_m.group(1))
+        def timing_value(metric):
+            # Vivado 2025 table: | WNS(ns) | 1.234 | ... |
+            for line in timing.splitlines():
+                if metric in line and "|" in line:
+                    cells = [c.strip() for c in line.split("|") if c.strip()]
+                    if len(cells) >= 2 and cells[0] == metric:
+                        return cells[1]
+            # Legacy plain-text: WNS(ns)  1.234
+            m = re.search(rf"{re.escape(metric)}\s+(-?\d+\.\d+)", timing)
+            return m.group(1) if m else None
+
+        for metric in ("WNS(ns)", "TNS(ns)", "WHS(ns)", "THS(ns)"):
+            val = timing_value(metric)
+            if val is not None:
+                print(f"{metric:10} {val}")
+
+        wns = timing_value("WNS(ns)")
+        if wns is not None:
+            wns = float(wns)
             period = 4.0
             achieved = period - wns
             fmax = (1000.0 / achieved) if achieved > 0 else float("nan")
             print()
             print("Target clock: 250 MHz (4.0 ns period)")
+            if wns >= 0:
+                print(f"Timing: MET (positive WNS)")
+            else:
+                print(f"Timing: FAILED (negative WNS)")
             if fmax == fmax:
                 print(f"Estimated Fmax: {fmax:.2f} MHz")
             else:
